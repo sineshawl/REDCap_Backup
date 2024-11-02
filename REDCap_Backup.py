@@ -25,9 +25,10 @@ redcap_url.split("\n")[0]
 # "project3": ["api_key1"],
 # }
 
-with open('api_keys.json') as jsonfile:
+with open("api_keys.json", mode='r') as jsonfile:
     api_dictionary = json.load(jsonfile)
 api_dictionary
+
 
 
 # This function will register the log of the backup
@@ -35,7 +36,7 @@ def backup_log(date_time, project_name, category, api_token, api_index, error):
 
     current_date = date.today().strftime('%B-%d-%Y')
 
-    root = 'E:\\MNTD\Backup\\'+current_date
+    root = 'D:\\Work\\MNTD\\Backup'+current_date
 
     log_file = root + '\\REDCap backup log.csv'
 
@@ -345,8 +346,8 @@ print(f"Total : {total}")
 
 
 current_date = date.today().strftime('%B-%d-%Y')
-root = 'E:\\MNTD\Backup\\'+current_date
-sub_root_1 = ''
+root = 'D:\\Work\\MNTD\\Backup'+current_date
+sub_root_1 = '' 
 sub_root_2 = ''
 sub_root_3 = ''
 file_paths = dict()
