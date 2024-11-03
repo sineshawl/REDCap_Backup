@@ -5,6 +5,7 @@ import sys
 import csv
 import re
 import time
+from itertools import islice
 from datetime import date, datetime
 
 
@@ -337,34 +338,76 @@ def xml_metadata_and_data(file_path):
     return count
         
 def projectInfo(api_dictionary, error_log=None):
-    projects = dict()
-    #! This code is from redcap Api: export project info
-    with requests.Session() as session:
-        for project_category in api_dictionary.keys():
-            project_list = []
-            index = 0
-            for token in api_dictionary[project_category]: 
-                data = {
-                'token': token,
-                'content': 'project',
-                'format': 'json',
-                'returnFormat': 'json'
-                }
+    function_of_error
+    if error_log is not None:
+        function_of_error = error_log[6]
+        error_key = error_log[3]
+        error_value = error_log[5] # previous log index + 1; to get the current log
+        new_dict = {}
+        # print(error_key)
+
+        # Start adding items after the specified key-value position
+        start_adding = False
+        
+        for key, values in api_dictionary.items():
+            # Check if we've reached the start key
+            if key == error_key:
+                print('True')
+                # Try to find the index of the specified start value in the list of values
                 try:
-                    r =session.post(redcap_url,data = data).json()
-                    print(r['project_title'])
-                    project_list.append(r['project_title'])
-                    projects[project_category]=project_list
-                    index +=1
-                except Exception as e:
-                    print(f' An error has occured: Project category: {project_category} API token: {token} Index: {index} REDCap Project name not found, may check your API code')
-                    Error = 'REDCap Project name may not found, please check your API code'
-                    backup_log(datetime.now(), '', project_category, token, index, Error)
-                    exit_input = input("Enter any key to exit")
-                    if exit_input:
-                        sys.exit(1)
-                    else:
-                        time.sleep(1000)
+                    start_index = int(error_value) -1
+                    print(start_index)
+                    # Add the sublist from start_value to the end of the list
+                    new_dict[key] = values[start_index:]
+                    # Set flag to add the rest of the keys
+                    print(new_dict)
+                    start_adding = True
+                except ValueError:
+                    raise ValueError(f"Value '{error_value}' not found in the list for key '{error_log[4]}'.")
+            elif start_adding:
+                # For all keys after start_key, add their entire list of values
+                new_dict[key] = values
+
+        print(new_dict)
+
+
+
+
+
+
+
+   
+
+
+    
+    # projects = dict()
+    # #! This code is from redcap Api: export project info
+    # with requests.Session() as session:
+    #     for project_category in api_dictionary.keys():
+    #         project_list = []
+    #         index = 0
+    #         for token in api_dictionary[project_category]: 
+    #             data = {
+    #             'token': token,
+    #             'content': 'project',
+    #             'format': 'json',
+    #             'returnFormat': 'json'
+    #             }
+    #             try:
+    #                 r =session.post(redcap_url,data = data).json()
+    #                 print(r['project_title'])
+    #                 project_list.append(r['project_title'])
+    #                 projects[project_category]=project_list
+    #                 index +=1
+    #             except Exception as e:
+    #                 print(f' An error has occured: Project category: {project_category} API token: {token} Index: {index} REDCap Project name not found, may check your API code')
+    #                 Error = 'REDCap Project name may not found, please check your API code'
+    #                 backup_log(datetime.now(), '', project_category, token, index, Error)
+    #                 exit_input = input("Enter any key to exit")
+    #                 if exit_input:
+    #                     sys.exit(1)
+    #                 else:
+    #                     time.sleep(1000)
 
 
 
@@ -395,21 +438,18 @@ if not os.path.exists(root):
     projectInfo(api_dictionary)
 elif os.path.exists(root):
     # If may the root folder already created, but the execution had halted due to errors
-
     log_file_path = os.path.join(root, 'REDCap backup log.csv' )
     last_log = []
     if os.path.exists(log_file_path):
         with open(log_file_path) as logFile:
             # retrieve the last line(recent error) from the csv file
-            last_log = list(csv.reader(logFile))[0]
-        print(last_log)
+            last_log = list(csv.reader(logFile))[-1]
+    projectInfo(api_dictionary, last_log)
 
 
 
 
-    
-    # if os.path(os.path.join())
-# os.chdir(root)
+os.chdir(root)
 
 
 
