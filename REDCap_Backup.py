@@ -12,15 +12,16 @@ from datetime import date, datetime
 # Example: https://redcaps...........
 
 
+
+
 redcap_url = ''
 with open('url.txt', 'r') as file:
     redcap_url = file.read()
-redcap_url.split("\n")[0]
-
+redcap_url = redcap_url.split("\n")[0]
 
 # fetch the api of REDCap from json file
 # Example Api
-# {  "prroject_1": ["api_key1", "api_key2"] 
+# {  "project_1": ["api_key1", "api_key2"] 
 # "project2": ["api_key1"]
 # "project3": ["api_key1"],
 # }
@@ -31,12 +32,13 @@ api_dictionary
 
 
 
+
 # This function will register the log of the backup
 def backup_log(date_time, project_name, category, api_token, api_index, error):
 
     current_date = date.today().strftime('%B-%d-%Y')
 
-    root = 'D:\\Work\\MNTD\\Backup'+current_date
+    root = 'D:\\Work\\MNTD\\Backup\\'+current_date
 
     log_file = root + '\\REDCap backup log.csv'
 
@@ -334,6 +336,40 @@ def xml_metadata_and_data(file_path):
     print(f'XML Metadata and Data: {count} files saved successfully')
     return count
         
+def projectInfo(api_dictionary, error_log=None):
+    projects = dict()
+    #! This code is from redcap Api: export project info
+    with requests.Session() as session:
+        for project_category in api_dictionary.keys():
+            project_list = []
+            index = 0
+            for token in api_dictionary[project_category]: 
+                data = {
+                'token': token,
+                'content': 'project',
+                'format': 'json',
+                'returnFormat': 'json'
+                }
+                try:
+                    r =session.post(redcap_url,data = data).json()
+                    print(r['project_title'])
+                    project_list.append(r['project_title'])
+                    projects[project_category]=project_list
+                    index +=1
+                except Exception as e:
+                    print(f' An error has occured: Project category: {project_category} API token: {token} Index: {index} REDCap Project name not found, may check your API code')
+                    Error = 'REDCap Project name may not found, please check your API code'
+                    backup_log(datetime.now(), '', project_category, token, index, Error)
+                    exit_input = input("Enter any key to exit")
+                    if exit_input:
+                        sys.exit(1)
+                    else:
+                        time.sleep(1000)
+
+
+
+
+
 
 # Summary count of
 print(f'Project_Catagory {" "*18} Count \n{"_"*40}')
@@ -341,51 +377,43 @@ for key in api_dictionary.keys():
     print(f'{key} : {" "*(35-len(key))} {len(api_dictionary[key])}')
 
 total = sum(len(value) for value in api_dictionary.values())
+print(f'\n {"_"*40}\n')
 print(f"Total : {total}")
-
+print(f'\n{"_"*40}\n')
 
 
 current_date = date.today().strftime('%B-%d-%Y')
-root = 'D:\\Work\\MNTD\\Backup'+current_date
+root = 'D:\\Work\\MNTD\\Backup\\'+current_date
 sub_root_1 = '' 
 sub_root_2 = ''
 sub_root_3 = ''
 file_paths = dict()
 
 if not os.path.exists(root):
+    # This will be execute at the initial stage (if there no error log file exist)
     os.makedirs(root)
-os.chdir(root)
+    projectInfo(api_dictionary)
+elif os.path.exists(root):
+    # If may the root folder already created, but the execution had halted due to errors
+
+    log_file_path = os.path.join(root, 'REDCap backup log.csv' )
+    last_log = []
+    if os.path.exists(log_file_path):
+        with open(log_file_path) as logFile:
+            # retrieve the last line(recent error) from the csv file
+            last_log = list(csv.reader(logFile))[0]
+        print(last_log)
 
 
 
-projects = dict()
-#! This code is from redcap Api: export project info
-with requests.Session() as session:
-    for project_category in api_dictionary.keys():
-        project_list = []
-        index = 0
-        for token in api_dictionary[project_category]: 
-            data = {
-            'token': token,
-            'content': 'project',
-            'format': 'json',
-            'returnFormat': 'json'
-            }
-            try:
-                r =session.post(redcap_url,data = data).json()
-                print(r['project_title'])
-                project_list.append(r['project_title'])
-                projects[project_category]=project_list
-                index +=1
-            except Exception as e:
-                print(f'An error has occured: Project category: {project_category} API token: {token} Index: {index} REDCap Project name not found, may check your API code')
-                Error = 'REDCap Project name may not found, please check your API code'
-                backup_log(datetime.now(), '', project_category, token, index, Error)
-                exit_input = input("Enter any key to exit")
-                if exit_input:
-                    sys.exit(1)
-                else:
-                    time.sleep(1000)
+
+    
+    # if os.path(os.path.join())
+# os.chdir(root)
+
+
+
+
 
                 
 
@@ -394,45 +422,45 @@ with requests.Session() as session:
 
 
 
-for folder in projects.keys():
-    sub_root_1 = folder
-    if not os.path.exists(sub_root_1):
-        os.makedirs(sub_root_1)
-    for project, token in zip(projects[folder], api_dictionary[folder]): 
-        print(project)
-        if re.findall(r'[\/:?"<>|]', project):
-              project = re.sub(r'[\\/:?"<>|]','_',project)
-        # print(project)
-        sub_root_2 = sub_root_1 + '\\' + project.strip()
+# for folder in projects.keys():
+#     sub_root_1 = folder
+#     if not os.path.exists(sub_root_1):
+#         os.makedirs(sub_root_1)
+#     for project, token in zip(projects[folder], api_dictionary[folder]): 
+#         print(project)
+#         if re.findall(r'[\/:?"<>|]', project):
+#               project = re.sub(r'[\\/:?"<>|]','_',project)
+#         # print(project)
+#         sub_root_2 = sub_root_1 + '\\' + project.strip()
                
-        if not os.path.exists(sub_root_2):   #create directory in local computer if it doesn't exist
-            os.makedirs(sub_root_2)
-        file_paths[token] = sub_root_2    
+#         if not os.path.exists(sub_root_2):   #create directory in local computer if it doesn't exist
+#             os.makedirs(sub_root_2)
+#         file_paths[token] = sub_root_2    
 
 
-print('All Folder Created Successfully')
+# print('All Folder Created Successfully')
 
-count_csv_raw = csv_data_raw(file_paths)
-print(f'Summary [CSV Raw Data]: {count_csv_raw} Total files saved successfully')
+# count_csv_raw = csv_data_raw(file_paths)
+# print(f'Summary [CSV Raw Data]: {count_csv_raw} Total files saved successfully')
 
-count_csv_label = csv_data_label(file_paths)
-print(f'Summary [CSV LABELED Data]: {count_csv_label} Total files saved successfully')
+# count_csv_label = csv_data_label(file_paths)
+# print(f'Summary [CSV LABELED Data]: {count_csv_label} Total files saved successfully')
 
-count_data_dictionary = csv_data_dictionary(file_paths)
-print(f'Summary [Data Dictionary]: {count_data_dictionary} Total files saved successfully')
+# count_data_dictionary = csv_data_dictionary(file_paths)
+# print(f'Summary [Data Dictionary]: {count_data_dictionary} Total files saved successfully')
 
-count_xml_metadata_only = xml_metadata_only(file_paths)
-print(f'Summary [Meta Data Only]: {count_xml_metadata_only} Total files saved successfully')
+# count_xml_metadata_only = xml_metadata_only(file_paths)
+# print(f'Summary [Meta Data Only]: {count_xml_metadata_only} Total files saved successfully')
 
-count_xml_metadata_and_data = xml_metadata_and_data(file_paths)
-print(f'Summary [Meta Data and Data]: {count_xml_metadata_and_data} Total files saved successfully')
+# count_xml_metadata_and_data = xml_metadata_and_data(file_paths)
+# print(f'Summary [Meta Data and Data]: {count_xml_metadata_and_data} Total files saved successfully')
 
 
-print("_"*30)
-print("\n\nBackup Completed")
-exit_input = input("Enter any key to exit")
-if exit_input:
-    sys.exit(1)
-else:
-    print("Closing the program...")
-    time.sleep(1000)
+# print("_"*30)
+# print("\n\nBackup Completed")
+# exit_input = input("Enter any key to exit")
+# if exit_input:
+#     sys.exit(1)
+# else:
+#     print("Closing the program...")
+#     time.sleep(1000)
