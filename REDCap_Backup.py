@@ -48,7 +48,7 @@ class Exporter:
 
         print(f'\nCSV Raw Data Started!\n')
         with requests.Session() as session:
-            for token, file_path in file_paths.items():
+            for token, file_path in self.file_paths.items():
                 print(file_path)
                 #The base name of a path is the last component of the path
                 file_name = os.path.basename(file_path)
@@ -109,7 +109,7 @@ class Exporter:
         print(f'\nCSV Labeled Data Started!\n')
         try:
             with requests.Session() as session:
-                for token, file_path in file_paths.items():
+                for token, file_path in self.file_paths.items():
                     #The base name of a path is the last component of the path
                     file_name = os.path.basename(file_path)
                     file_path = os.path.join(file_path, 'CSV Data Label')
@@ -166,7 +166,7 @@ class Exporter:
         print(f'\nCSV Data Dictionary Started!\n')
         try:
             with requests.Session() as session:
-                for token, file_path in file_paths.items():
+                for token, file_path in self.file_paths.items():
                     #The base name of a path is the last component of the path
                     file_name = os.path.basename(file_path)
                     file_path = os.path.join(file_path, 'CSV Data Dictionary')
@@ -209,12 +209,12 @@ class Exporter:
         print(f'CSV Data Dictionary: {count} files saved successfully')
         return count
 
-    def xml_metadata_only(self, file_paths):
+    def xml_metadata_only(self):
         count = 0
         print(f'\nXML Meta Data Started!\n')
         try:
             with requests.Session() as session:
-                for token, file_path in file_paths.items():
+                for token, file_path in self.file_paths.items():
                     #The base name of a path is the last component of the path
                     file_name = os.path.basename(file_path)
                     file_path = os.path.join(file_path, 'XML Metadata Only')
@@ -265,7 +265,7 @@ class Exporter:
         print(f'\nXML Meta Data with Data Started!\n')
         try:
             with requests.Session() as session:
-                for token, file_path in file_paths.items():
+                for token, file_path in self.filepaths.items():
                     #The base name of a path is the last component of the path
                     file_name = os.path.basename(file_path)
                     file_path = os.path.join(file_path, 'XML Metadata and Data')
